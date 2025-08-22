@@ -20,6 +20,8 @@ except Exception as _e:
     wiringpi = _DummyWiringPi()
     print(f"[WARN] wiringpi not available: {_e}. GPIO features disabled.")
 import sys
+# Restore user's hard-coded environment site-packages path
+sys.path.append("/root/serial_env/lib/python3.12/site-packages")
 import os
 # Avoid hard-coding site-packages; if running in a virtualenv, do nothing.
 # Optionally, allow an extra site-packages path via env (EXTRA_SITE_PACKAGES or PYTHON_SITE_PACKAGES).
@@ -2342,7 +2344,9 @@ def index():
         
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
-            if (e.target.tagName === 'INPUT') return; // Don't interfere with input fields
+            // Don't interfere with inputs or textareas (so spacebar works in text boxes)
+            const tag = (e.target.tagName || '').toUpperCase();
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
             
             switch(e.key) {
                 case 'ArrowUp': jog(0, 1); e.preventDefault(); break;
@@ -2541,13 +2545,14 @@ def index():
         }
 
         // Fonts management
-        function loadFontList() {
+    function loadFontList() {
             fetch('/fonts')
                 .then(r => r.json())
                 .then(fonts => {
                     const list = document.getElementById('fontList');
                     const sel = document.getElementById('fontSelect');
-                    const prev = sel && sel.value;
+            const prev = sel && sel.value;
+            const persisted = localStorage.getItem('vector:selectedFont') || '';
                     if (!Array.isArray(fonts) || fonts.length === 0) {
                         if (list) list.innerHTML = '<p>No fonts uploaded</p>';
                         if (sel) sel.innerHTML = '<option value="">-- Upload a font --</option>';
@@ -2583,9 +2588,12 @@ def index():
     `;
                     });
                     if (list) list.innerHTML = html;
-                    // Restore previous selection if still available
-                    if (sel && prev && Array.from(sel.options).some(o => o.value === prev)) {
-                        sel.value = prev;
+                    // Restore persisted or previous selection if available
+                    if (sel) {
+                        let target = persisted || prev || '';
+                        if (target && Array.from(sel.options).some(o => o.value === target)) {
+                            sel.value = target;
+                        }
                     }
                 })
                 .catch(err => {
@@ -2624,6 +2632,20 @@ def index():
                 })
                 .catch(err => alert('Upload error: ' + err));
         }
+
+        // Persist selected font in localStorage
+        (function persistFontSelection(){
+            const sel = document.getElementById('fontSelect');
+            if (!sel) return;
+            sel.addEventListener('change', function(){
+                localStorage.setItem('vector:selectedFont', sel.value || '');
+            });
+            // If options are already present (race), try immediate restore
+            const persisted = localStorage.getItem('vector:selectedFont') || '';
+            if (persisted && Array.from(sel.options).some(o => o.value === persisted)) {
+                sel.value = persisted;
+            }
+        })();
 
         // Vector text generation
         function generateVectorGcode() {
