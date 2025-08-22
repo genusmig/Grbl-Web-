@@ -104,7 +104,7 @@ In the UI:
 ![Home](docs/screenshots/home.png)
 ![Day Theme](docs/screenshots/day.png)
 ![Control Panel Panel](docs/screenshots/controls.png)
-
+![Font and Text Panel](docs/screenshots/font and text to svg gcode generator.png)
 ## Auto-start on boot (systemd)
 Create `/etc/systemd/system/grbl-web.service`:
 
@@ -160,4 +160,5 @@ MIT
 
 ## Disclaimer
 The author has limited programming experience; much of this code was generated with the assistance of AI based on user-provided specifications. Use at your own risk and review before deploying to production environments.
+
 
