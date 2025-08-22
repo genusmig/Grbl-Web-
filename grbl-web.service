@@ -1,0 +1,22 @@
+[Unit]
+Description=GRBL Web UI + Telnet Bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+# Edit WorkingDirectory to where you place this project on the device
+WorkingDirectory=/opt/grbl-web
+# Environment overrides (edit as needed)
+Environment=GCODE_DIR=/root/gcodes
+Environment=FONTS_DIR=/root/fonts
+Environment=LASER_S_MAX=1000
+Environment=NODE_BIN=/usr/bin/node
+Environment=TELNET_PORT=23
+# Start the Python server
+ExecStart=/usr/bin/python3 /opt/grbl-web/serial_web.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
