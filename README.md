@@ -50,6 +50,30 @@ npm i google-font-to-svg-path opentype.js
 - LASER_S_MAX: max S (maps 0–100% power), default `1000` (GRBL `$30`)
 - NODE_BIN: path to Node if not in PATH (e.g., `/usr/bin/node`)
 - TELNET_PORT: raw telnet port (default `23`)
+- EXTRA_SITE_PACKAGES (optional): absolute path to an additional site-packages directory if you are not using a virtualenv.
+
+### Choose your setup style: Env or Direct
+- Option A — Use environment variables (recommended):
+	- Temporary (shell session):
+		```bash
+		export GCODE_DIR=/root/gcodes
+		export FONTS_DIR=/root/fonts
+		export NODE_BIN=/usr/bin/node
+		python3 serial_web.py
+		```
+	- Inline (one-liner):
+		```bash
+		GCODE_DIR=/root/gcodes FONTS_DIR=/root/fonts NODE_BIN=/usr/bin/node python3 serial_web.py
+		```
+	- Systemd: add `Environment=` lines in the service (see below).
+
+- Option B — Direct defaults (no env):
+	- Ensure the default folders exist and are writable by the service user:
+		```bash
+		sudo mkdir -p /root/gcodes /root/fonts
+		```
+	- Make sure `node` is on PATH (e.g., `/usr/bin/node`).
+	- Run without exporting anything; the app will use its built-in defaults.
 
 Note: On systems without WiringPi, GPIO is disabled automatically; M8/M9 still appear in G-code.
 
@@ -65,6 +89,8 @@ export NODE_BIN=/usr/bin/node
 
 python3 serial_web.py
 ```
+
+Note: The server no longer hard-codes a Python `site-packages` path. If you don’t use a virtualenv and need a non-standard path, set `EXTRA_SITE_PACKAGES=/path/to/site-packages` before launching. Using a venv is recommended to avoid conflicts.
 
 Open http://<device-ip>:5000 in a browser.
 
@@ -87,10 +113,11 @@ Wants=network-online.target
 Type=simple
 User=root
 WorkingDirectory=/opt/grbl-web
-Environment=GCODE_DIR=/root/gcodes
-Environment=FONTS_DIR=/root/fonts
-Environment=LASER_S_MAX=1000
-Environment=NODE_BIN=/usr/bin/node
+# Option A: uncomment Environment lines to override defaults
+#Environment=GCODE_DIR=/root/gcodes
+#Environment=FONTS_DIR=/root/fonts
+#Environment=LASER_S_MAX=1000
+#Environment=NODE_BIN=/usr/bin/node
 ExecStart=/usr/bin/python3 /opt/grbl-web/serial_web.py
 Restart=on-failure
 

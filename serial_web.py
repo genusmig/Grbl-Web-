@@ -20,14 +20,23 @@ except Exception as _e:
     wiringpi = _DummyWiringPi()
     print(f"[WARN] wiringpi not available: {_e}. GPIO features disabled.")
 import sys
-sys.path.append("/root/serial_env/lib/python3.12/site-packages")
+import os
+# Avoid hard-coding site-packages; if running in a virtualenv, do nothing.
+# Optionally, allow an extra site-packages path via env (EXTRA_SITE_PACKAGES or PYTHON_SITE_PACKAGES).
+try:
+    if not os.environ.get('VIRTUAL_ENV'):
+        extra_site = os.environ.get('EXTRA_SITE_PACKAGES') or os.environ.get('PYTHON_SITE_PACKAGES')
+        if extra_site and os.path.isdir(extra_site) and extra_site not in sys.path:
+            sys.path.append(extra_site)
+except Exception:
+    pass
 
 import serial
 import time
 import glob
 import threading
 import socket
-import os
+import os  # re-import safe; kept for existing import ordering
 import json
 from flask import Flask, request, jsonify, send_file
 from flask_socketio import SocketIO, emit
